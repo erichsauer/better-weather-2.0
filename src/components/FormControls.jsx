@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 /* eslint-disable react/jsx-props-no-spreading */
 import React, { useState } from 'react';
 import {
@@ -7,14 +8,18 @@ import {
   Button,
 } from '@chakra-ui/react';
 import { Field, Form, Formik } from 'formik';
-import fetchForecast from '../utils/fetchUtils';
+import { fetchLatLon, getDestinations } from '../utils/fetchUtils';
 
-function FormControls() {
-  const initialFormState = {
-    zip: '',
-  };
+const initialFormState = {
+  zip: '',
+  radius: 2,
+  clouds: 30,
+  rain: 0.2,
+  temp: 50,
+};
+
+function FormControls({ setDestinations }) {
   const [formState, setFormState] = useState(initialFormState);
-  const [forecastResults, setForecastResults] = useState({});
 
   const validateForm = (value) => {
     let error;
@@ -29,9 +34,19 @@ function FormControls() {
 
   const handleSubmit = async (values, actions) => {
     setFormState(values);
-    const forecast = await fetchForecast();
-    setForecastResults(forecast);
-    console.log(forecastResults);
+    const {
+      radius, clouds, rain, temp,
+    } = formState;
+
+    const { centerLat, centerLon, name } = await fetchLatLon(values.zip);
+
+    const destinations = await getDestinations(centerLat, centerLon, {
+      radius, clouds, rain, temp,
+    });
+
+    console.log(destinations, name);
+
+    setDestinations(destinations);
     actions.setSubmitting(false);
   };
 
